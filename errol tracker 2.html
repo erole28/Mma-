@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Erol – MMA Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --red: #E8252A;
+  --dark: #0A0A0A;
+  --card: #141414;
+  --card2: #1c1c1c;
+  --border: #252525;
+  --text: #EEEDE8;
+  --muted: #666;
+  --gold: #C8A84B;
+  --green: #3DBA7A;
+  --blue: #3D8CBA;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+}
+
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+.nav-logo span { color: var(--red); }
+
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.nav-tab {
+  padding: 7px 14px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 3px;
+  border: none;
+  background: none;
+  font-family: 'Barlow', sans-serif;
+  transition: all 0.15s;
+}
+.nav-tab:hover { color: var(--text); background: var(--card); }
+.nav-tab.active { color: var(--dark); background: var(--red); }
+
+.nav-date {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* PAGES */
+.page { display: none; padding: 24px; max-width: 960px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* DASHBOARD */
+.dash-hero {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 28px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.dash-hero::after {
+  content: 'W' attr(data-week);
+  position: absolute;
+  right: -10px;
+  top: -20px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 140px;
+  color: rgba(232,37,42,0.05);
+  pointer-events: none;
+  line-height: 1;
+}
+
+.dash-hero h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.dash-hero h2 span { color: var(--red); }
+.dash-hero p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+.progress-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.prog-stat {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px;
+  text-align: center;
+}
+.prog-stat .val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--gold);
+}
+.prog-stat .lbl { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media(max-width:600px) { .dash-grid { grid-template-columns: 1fr; } .progress-row { grid-template-columns: 1fr 1fr; } }
+
+.dash-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+}
+.dash-card h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  color: var(--gold);
+}
+
+.mini-list { display: flex; flex-direction: column; gap: 8px; }
+.mini-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--card2);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 8px;
+}
+.mini-item:hover { background: #222; }
+.mini-item.done { opacity: 0.5; }
+.mini-item.done .mi-name { text-decoration: line-through; }
+
+.check-btn {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  font-size: 12px;
+}
+.mini-item.done .check-btn { background: var(--green); border-color: var(--green); }
+
+/* WEEK SELECTOR */
+.week-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.week-btn {
+  padding: 6px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'Barlow', sans-serif;
+  transition: all 0.15s;
+}
+.week-btn:hover { color: var(--text); border-color: #444; }
+.week-btn.active { background: var(--red); color: white; border-color: var(--red); }
+
+/* TRAINING PAGE */
+.day-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.day-btn {
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'Barlow', sans-serif;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.day-btn:hover { color: var(--text); }
+.day-btn.active { background: var(--red); color: white; border-color: var(--red); }
+.day-btn.done-day { border-color: var(--green); color: var(--green); }
+.day-btn.done-day.active { background: var(--green); color: white; }
+
+.training-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.tc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.tc-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.tc-subtitle { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+.tc-badge {
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.badge-kraft { background: rgba(232,37,42,0.15); color: var(--red); }
+.badge-boxing { background: rgba(200,168,75,0.15); color: var(--gold); }
+.badge-cond { background: rgba(61,186,122,0.15); color: var(--green); }
+.badge-rest { background: rgba(100,100,100,0.15); color: var(--muted); }
+
+.exercise-rows { display: flex; flex-direction: column; gap: 8px; }
+
+.ex-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+.ex-row:hover { background: #1f1f1f; }
+.ex-row.done { border-color: rgba(61,186,122,0.3); }
+
+.ex-check {
+  width: 22px; height: 22px;
+  border: 1.5px solid #333;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.ex-row.done .ex-check { background: var(--green); border-color: var(--green); }
+
+.ex-info { flex: 1; }
+.ex-name { font-size: 14px; font-weight: 500; }
+.ex-row.done .ex-name { text-decoration: line-through; color: var(--muted); }
+.ex-sets { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.ex-row.done .ex-sets { color: #444; }
+
+.day-complete-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 16px;
+}
+.day-complete-btn:hover { background: #c01f24; }
+.day-complete-btn.done { background: var(--green); }
+
+/* NUTRITION */
+.meal-cards { display: flex; flex-direction: column; gap: 12px; }
+
+.meal-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.meal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+}
+
+.meal-header-left { display: flex; align-items: center; gap: 12px; }
+.meal-time-badge {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--red);
+  font-weight: 600;
+}
+.meal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.5px;
+}
+
+.meal-done-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.meal-done-badge.pending { background: rgba(100,100,100,0.1); color: var(--muted); }
+.meal-done-badge.eaten { background: rgba(61,186,122,0.15); color: var(--green); }
+
+.meal-body { padding: 0 20px 16px; display: flex; flex-direction: column; gap: 6px; }
+
+.food-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--card2);
+  border-radius: 3px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.food-item:hover { background: #222; }
+.food-item.eaten-item { opacity: 0.5; }
+.food-item.eaten-item span { text-decoration: line-through; }
+
+.food-check {
+  width: 16px; height: 16px;
+  border: 1.5px solid #333;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  transition: all 0.15s;
+}
+.food-item.eaten-item .food-check { background: var(--green); border-color: var(--green); }
+
+.macro-bar {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--card2);
+  border-top: 1px solid var(--border);
+}
+.macro-pill { text-align: center; flex: 1; }
+.macro-pill .mpv { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--gold); }
+.macro-pill .mpl { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+/* PROGRESS */
+.weight-input-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: flex-end;
+}
+
+.input-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.input-group label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.input-group input {
+  padding: 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  width: 100%;
+}
+.input-group input:focus { outline: none; border-color: var(--red); }
+
+.add-btn {
+  padding: 10px 20px;
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.add-btn:hover { background: #c01f24; }
+
+/* CHART */
+.chart-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.chart-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+canvas { width: 100% !important; }
+
+.weight-log {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+}
+.weight-log h3 { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--gold); margin-bottom: 14px; }
+.log-entries { display: flex; flex-direction: column; gap: 6px; }
+.log-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--card2);
+  border-radius: 3px;
+  font-size: 13px;
+}
+.log-entry .le-date { color: var(--muted); }
+.log-entry .le-weight { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--text); }
+.log-entry .le-diff { font-size: 11px; font-weight: 700; }
+.log-entry .le-diff.up { color: var(--red); }
+.log-entry .le-diff.down { color: var(--green); }
+
+/* AI ANALYSIS */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 6px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  margin-bottom: 20px;
+  position: relative;
+}
+.upload-zone:hover { border-color: var(--red); }
+.upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-zone .uz-icon { font-size: 40px; margin-bottom: 12px; }
+.upload-zone h3 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; margin-bottom: 6px; }
+.upload-zone p { font-size: 13px; color: var(--muted); }
+
+.preview-imgs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.preview-img-wrap {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.preview-img-wrap img { width: 120px; height: 120px; object-fit: cover; display: block; }
+.preview-img-wrap .rm-img {
+  position: absolute;
+  top: 4px; right: 4px;
+  background: rgba(0,0,0,0.7);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 20px; height: 20px;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.analyze-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 20px;
+}
+.analyze-btn:hover { background: #c01f24; }
+.analyze-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+.analysis-result {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+}
+.analysis-result h3 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); margin-bottom: 16px; }
+.analysis-text { font-size: 14px; line-height: 1.8; color: #ccc; white-space: pre-wrap; }
+
+.loading-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.dot {
+  width: 8px; height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: pulse 1s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+.section-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.streak-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin-bottom: 20px;
+}
+.streak-day {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.streak-day.trained { background: rgba(61,186,122,0.25); border-color: rgba(61,186,122,0.4); color: var(--green); }
+.streak-day.today { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">EROL <span>UFC</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('dash',this)">Home</button>
+    <button class="nav-tab" onclick="goPage('training',this)">Training</button>
+    <button class="nav-tab" onclick="goPage('nutrition',this)">Ernährung</button>
+    <button class="nav-tab" onclick="goPage('progress',this)">Fortschritt</button>
+    <button class="nav-tab" onclick="goPage('analysis',this)">KI-Analyse</button>
+  </div>
+  <div class="nav-date" id="navDate"></div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dash">
+  <div class="dash-hero" id="dashHero" data-week="1">
+    <h2>TAG <span id="dashDay">1</span> — WOCHE <span id="dashWeekNum">1</span></h2>
+    <p id="dashPhase">Phase 1: Fundament aufbauen</p>
+    <div class="progress-row">
+      <div class="prog-stat"><div class="val" id="dashTrainDone">0/5</div><div class="lbl">Training diese Woche</div></div>
+      <div class="prog-stat"><div class="val" id="dashMealsDone">0/5</div><div class="lbl">Mahlzeiten heute</div></div>
+      <div class="prog-stat"><div class="val" id="dashWeight">95 kg</div><div class="lbl">Aktuelles Gewicht</div></div>
+    </div>
+  </div>
+
+  <div class="section-label">Diese Woche</div>
+  <div class="streak-row" id="streakRow"></div>
+
+  <div class="dash-grid">
+    <div class="dash-card">
+      <h3>Heute's Training</h3>
+      <div class="mini-list" id="dashTrainingList"></div>
+    </div>
+    <div class="dash-card">
+      <h3>Nächste Mahlzeit</h3>
+      <div class="mini-list" id="dashMealList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRAINING -->
+<div class="page" id="page-training">
+  <div class="section-label">Woche wählen</div>
+  <div class="week-bar" id="weekBar"></div>
+
+  <div class="section-label">Tag wählen</div>
+  <div class="day-selector" id="daySelector"></div>
+
+  <div id="trainingContent"></div>
+</div>
+
+<!-- NUTRITION -->
+<div class="page" id="page-nutrition">
+  <div class="section-label">Heute's Ernährungsplan</div>
+
+  <div class="macro-bar" style="background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:20px;">
+    <div class="macro-pill"><div class="mpv" id="nCalDone">0</div><div class="mpl">kcal</div></div>
+    <div class="macro-pill"><div class="mpv" id="nProtDone">0g</div><div class="mpl">Protein</div></div>
+    <div class="macro-pill"><div class="mpv" id="nCarbDone">0g</div><div class="mpl">Kohlenhydrate</div></div>
+    <div class="macro-pill"><div class="mpv" id="nFatDone">0g</div><div class="mpl">Fett</div></div>
+  </div>
+
+  <div class="meal-cards" id="mealCards"></div>
+</div>
+
+<!-- PROGRESS -->
+<div class="page" id="page-progress">
+  <div class="weight-input-row">
+    <div class="input-group">
+      <label>Gewicht (kg)</label>
+      <input type="number" id="weightInput" placeholder="z.B. 94.5" step="0.1" min="50" max="200">
+    </div>
+    <div class="input-group">
+      <label>Datum</label>
+      <input type="date" id="dateInput">
+    </div>
+    <button class="add-btn" onclick="addWeight()">+</button>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Gewichtsverlauf</div>
+    <canvas id="weightChart" height="220"></canvas>
+  </div>
+
+  <div class="weight-log">
+    <h3>Einträge</h3>
+    <div class="log-entries" id="logEntries"></div>
+  </div>
+</div>
+
+<!-- AI ANALYSIS -->
+<div class="page" id="page-analysis">
+  <div class="section-label">KI Körper-Analyse</div>
+
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" accept="image/*" multiple onchange="handleImages(this.files)">
+    <div class="uz-icon">📸</div>
+    <h3>Fotos hochladen</h3>
+    <p>Vorne, hinten, Seite — tippe oder ziehe Bilder hierher</p>
+  </div>
+
+  <div class="preview-imgs" id="previewImgs"></div>
+
+  <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()" disabled>
+    KI-Analyse starten
+  </button>
+
+  <div class="analysis-result" id="analysisResult" style="display:none;">
+    <h3>🤖 KI-Analyse</h3>
+    <div class="analysis-text" id="analysisText"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const TRAINING = {
+  "1-4": [
+    { name: "Montag", type: "kraft", label: "Kraft Oberkörper", exercises: [
+      { n: "Bankdrücken (Langhantel)", s: "4×8" },
+      { n: "Kabelzug Rudern", s: "4×10" },
+      { n: "Schulterdrücken Kurzh.", s: "3×10" },
+      { n: "Bizeps + Trizeps Superset", s: "3×12" },
+      { n: "Plank", s: "3×45 Sek." }
+    ]},
+    { name: "Dienstag", type: "boxing", label: "Boxsack + Kondition", exercises: [
+      { n: "Seilspringen Warm-up", s: "5 Min." },
+      { n: "Jab-Cross Technik am Sack", s: "5×2 Min." },
+      { n: "Jab-Cross-Hook Kombi", s: "5×2 Min." },
+      { n: "Burpees zwischen Runden", s: "10 Stk." },
+      { n: "Shadow Boxing Cool-down", s: "3 Min." }
+    ]},
+    { name: "Mittwoch", type: "kraft", label: "Kraft Unterkörper", exercises: [
+      { n: "Kniebeuge (Squat Rack)", s: "4×8" },
+      { n: "Romanian Deadlift Kurzh.", s: "4×10" },
+      { n: "Ausfallschritte", s: "3×12 pro Bein" },
+      { n: "Wadenheben", s: "4×15" },
+      { n: "Sit-ups / Crunches", s: "4×20" }
+    ]},
+    { name: "Donnerstag", type: "cond", label: "Kondition & Core", exercises: [
+      { n: "Fahrrad / Laufen moderat", s: "20 Min." },
+      { n: "Mountain Climbers", s: "4×30 Sek." },
+      { n: "Russian Twists", s: "4×20" },
+      { n: "Hollow Body Hold", s: "3×30 Sek." },
+      { n: "Kabelzug Woodchops", s: "3×12" }
+    ]},
+    { name: "Freitag", type: "boxing", label: "Boxsack + Kraft", exercises: [
+      { n: "Boxsack Freistil", s: "8×2 Min." },
+      { n: "Klimmzüge / Kabelzug", s: "4×8" },
+      { n: "Dips", s: "4×10" },
+      { n: "Farmer's Walk Kurzh.", s: "4×30m" }
+    ]},
+    { name: "Samstag", type: "cond", label: "HIIT + Beweglichkeit", exercises: [
+      { n: "HIIT 20 Sek. an / 10 Sek. aus", s: "8 Runden" },
+      { n: "Burpees / Squat Jumps", s: "im HIIT" },
+      { n: "Hüfte + Hüftbeuger Dehnen", s: "10 Min." },
+      { n: "Schulter Mobilität", s: "10 Min." }
+    ]},
+    { name: "Sonntag", type: "rest", label: "Ruhetag", exercises: [
+      { n: "Spaziergang", s: "30–45 Min." },
+      { n: "Leichtes Dehnen", s: "Optional" }
+    ]}
+  ],
+  "5-8": [
+    { name: "Montag", type: "kraft", label: "Kraft Oberkörper+", exercises: [
+      { n: "Bankdrücken", s: "5×5 (schwer)" },
+      { n: "Pendlay Row", s: "4×6" },
+      { n: "Schulterdrücken stehend", s: "4×8" },
+      { n: "Face Pulls Kabel", s: "3×15" },
+      { n: "Ab-Wheel Rollout", s: "4×10" }
+    ]},
+    { name: "Dienstag", type: "boxing", label: "Boxsack Intensiv", exercises: [
+      { n: "Seilspringen", s: "3×3 Min." },
+      { n: "Kombis am Sack 1-2-3-2", s: "8×3 Min." },
+      { n: "Power-Schläge Sprint", s: "5×30 Sek." },
+      { n: "Shadow Boxing", s: "3×3 Min." }
+    ]},
+    { name: "Mittwoch", type: "kraft", label: "Kraft Unterkörper+", exercises: [
+      { n: "Squat (schwer)", s: "5×5" },
+      { n: "Bulgarian Split Squat", s: "4×8 pro Bein" },
+      { n: "Kreuzheben", s: "4×5" },
+      { n: "Box Jumps", s: "4×8" },
+      { n: "Hanging Leg Raises", s: "4×12" }
+    ]},
+    { name: "Donnerstag", type: "cond", label: "MMA Kondition", exercises: [
+      { n: "5 Runden Zirkel (5 Min.)", s: "5 Runden" },
+      { n: "Boxsack → Burpees → Core", s: "pro Runde" },
+      { n: "1 Min. Pause zwischen Runden", s: "Pause" }
+    ]},
+    { name: "Freitag", type: "boxing", label: "Kraft + Sack Kombi", exercises: [
+      { n: "Klimmzüge", s: "5×5" },
+      { n: "Dips (mit Gewicht)", s: "4×8" },
+      { n: "Boxsack Endurance", s: "10×2 Min." },
+      { n: "Sack Finisher", s: "2 Min." }
+    ]},
+    { name: "Samstag", type: "cond", label: "Ausdauer + Mobility", exercises: [
+      { n: "Laufen mittel", s: "30–40 Min." },
+      { n: "Hüfte + Hüftbeuger Dehnen", s: "15 Min." },
+      { n: "Schulter + Thorax Mob.", s: "10 Min." }
+    ]},
+    { name: "Sonntag", type: "rest", label: "Ruhetag", exercises: [
+      { n: "Erholen. Schlafen. Essen.", s: "" },
+      { n: "Kein Training = auch Training.", s: "" }
+    ]}
+  ]
+};
+
+const MEALS = [
+  { id: "breakfast", time: "07:00", name: "Frühstück", cal: 450, prot: 35, carb: 35, fat: 14, items: [
+    "4–5 Eier (Rührei oder gekocht)",
+    "2 Scheiben Vollkornbrot / Ekmek",
+    "Tomate & Gurke (Domates & Salatalık)",
+    "Türkischer Tee ohne Zucker"
+  ]},
+  { id: "lunch", time: "12:30", name: "Mittagessen", cal: 600, prot: 50, carb: 60, fat: 12, items: [
+    "150–200g Hühnchen (Tavuk), gegrillt",
+    "Linsensuppe (Mercimek Çorbası)",
+    "Salat mit Olivenöl",
+    "1 kleine Portion Reis oder Nudeln"
+  ]},
+  { id: "preworkout", time: "15:30", name: "Pre-Workout Snack", cal: 300, prot: 15, carb: 40, fat: 8, items: [
+    "1 Banane",
+    "200g Naturjoghurt (Yoğurt)",
+    "Handvoll Nüsse (Fındık / Ceviz)"
+  ]},
+  { id: "dinner", time: "19:00", name: "Abendessen", cal: 550, prot: 50, carb: 45, fat: 15, items: [
+    "150g Thunfisch (Ton balığı) oder Hühnchen",
+    "Viel Gemüse (Biber, Patlıcan, Kabak)",
+    "1 kleine Portion Reis oder Kartoffel",
+    "Lor Peyniri / Çökelek als Beilage"
+  ]},
+  { id: "snack", time: "21:00", name: "Abend-Snack", cal: 120, prot: 10, carb: 15, fat: 2, items: [
+    "200g Naturjoghurt (nur bei Hunger)",
+    "Kein Süßes / Chips"
+  ]}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = JSON.parse(localStorage.getItem('errolState') || 'null') || {
+  currentWeekGroup: "1-4",
+  currentDay: 0,
+  exercises: {}, // key: "weekGroup-dayIdx-exIdx" -> bool
+  meals: {},     // key: "YYYY-MM-DD-mealId-itemIdx" -> bool
+  mealDone: {},  // key: "YYYY-MM-DD-mealId" -> bool
+  weights: [],   // [{date, kg}]
+  trainedDays: {} // key: "YYYY-MM-DD" -> bool
+};
+
+function save() { localStorage.setItem('errolState', JSON.stringify(state)); }
+
+function today() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
+function todayLabel() {
+  return new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function goPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+
+  if (id === 'dash') renderDash();
+  if (id === 'training') renderTraining();
+  if (id === 'nutrition') renderNutrition();
+  if (id === 'progress') renderProgress();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDash() {
+  document.getElementById('navDate').textContent = todayLabel();
+
+  // week number
+  const weekNum = state.currentWeekGroup === "1-4" ? "1–4" : "5–8";
+  document.getElementById('dashWeekNum').textContent = weekNum;
+
+  const phase = state.currentWeekGroup === "1-4" ? "Phase 1: Fundament aufbauen" : "Phase 2: Intensität & MMA-Fitness";
+  document.getElementById('dashPhase').textContent = phase;
+
+  // day
+  document.getElementById('dashDay').textContent = state.currentDay + 1;
+  document.getElementById('dashHero').dataset.week = state.currentWeekGroup.split('-')[0];
+
+  // trained this week (Mon-Sun)
+  const mon = getWeekMonday();
+  let trainCount = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().split('T')[0];
+    if (state.trainedDays[key]) trainCount++;
+  }
+  document.getElementById('dashTrainDone').textContent = trainCount + '/6';
+
+  // meals today
+  const t = today();
+  const mealsDone = MEALS.filter(m => state.mealDone[t + '-' + m.id]).length;
+  document.getElementById('dashMealsDone').textContent = mealsDone + '/' + MEALS.length;
+
+  // weight
+  if (state.weights.length) {
+    const last = state.weights[state.weights.length - 1];
+    document.getElementById('dashWeight').textContent = last.kg + ' kg';
+  }
+
+  // streak row (this week)
+  const days = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  const sr = document.getElementById('streakRow');
+  sr.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().split('T')[0];
+    const isToday = key === today();
+    const trained = state.trainedDays[key];
+    const el = document.createElement('div');
+    el.className = 'streak-day' + (trained ? ' trained' : '') + (isToday ? ' today' : '');
+    el.textContent = days[i];
+    sr.appendChild(el);
+  }
+
+  // today's training mini
+  const dayData = TRAINING[state.currentWeekGroup][state.currentDay];
+  const tList = document.getElementById('dashTrainingList');
+  tList.innerHTML = '';
+  dayData.exercises.slice(0, 4).forEach((ex, i) => {
+    const key = state.currentWeekGroup + '-' + state.currentDay + '-' + i;
+    const done = state.exercises[key];
+    const el = document.createElement('div');
+    el.className = 'mini-item' + (done ? ' done' : '');
+    el.innerHTML = `<div class="check-btn">${done ? '✓' : ''}</div><span class="mi-name">${ex.n}</span><span style="font-size:11px;color:var(--muted)">${ex.s}</span>`;
+    el.onclick = () => { state.exercises[key] = !done; save(); renderDash(); };
+    tList.appendChild(el);
+  });
+
+  // next meal
+  const mList = document.getElementById('dashMealList');
+  mList.innerHTML = '';
+  MEALS.forEach(m => {
+    const done = state.mealDone[today() + '-' + m.id];
+    const el = document.createElement('div');
+    el.className = 'mini-item' + (done ? ' done' : '');
+    el.innerHTML = `<div class="check-btn">${done ? '✓' : ''}</div><span class="mi-name">${m.name}</span><span style="font-size:11px;color:var(--muted)">${m.time}</span>`;
+    el.onclick = () => { state.mealDone[today() + '-' + m.id] = !done; save(); renderDash(); };
+    mList.appendChild(el);
+  });
+}
+
+function getWeekMonday() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const mon = new Date(d.setDate(diff));
+  return mon.toISOString().split('T')[0];
+}
+
+// ============================================================
+// TRAINING
+// ============================================================
+function renderTraining() {
+  // week bar
+  const wb = document.getElementById('weekBar');
+  wb.innerHTML = '';
+  ['1-4','5-8'].forEach(wg => {
+    const b = document.createElement('button');
+    b.className = 'week-btn' + (state.currentWeekGroup === wg ? ' active' : '');
+    b.textContent = 'Woche ' + wg;
+    b.onclick = () => { state.currentWeekGroup = wg; state.currentDay = 0; save(); renderTraining(); };
+    wb.appendChild(b);
+  });
+
+  // day selector
+  const ds = document.getElementById('daySelector');
+  ds.innerHTML = '';
+  const days = TRAINING[state.currentWeekGroup];
+  days.forEach((d, i) => {
+    const trainedKey = todayKey(i);
+    const isDone = state.trainedDays[trainedKey];
+    const b = document.createElement('button');
+    b.className = 'day-btn' + (state.currentDay === i ? ' active' : '') + (isDone ? ' done-day' : '');
+    b.textContent = d.name;
+    b.onclick = () => { state.currentDay = i; save(); renderTraining(); };
+    ds.appendChild(b);
+  });
+
+  // training card
+  const tc = document.getElementById('trainingContent');
+  const dayData = days[state.currentDay];
+  const badge = { kraft: 'badge-kraft', boxing: 'badge-boxing', cond: 'badge-cond', rest: 'badge-rest' }[dayData.type];
+  const badgeTxt = { kraft: 'Kraft', boxing: 'Boxsack', cond: 'Kondition', rest: 'Ruhetag' }[dayData.type];
+
+  let exHTML = '';
+  dayData.exercises.forEach((ex, i) => {
+    const key = state.currentWeekGroup + '-' + state.currentDay + '-' + i;
+    const done = state.exercises[key];
+    exHTML += `<div class="ex-row${done ? ' done' : ''}" onclick="toggleEx('${key}')">
+      <div class="ex-check">${done ? '✓' : ''}</div>
+      <div class="ex-info"><div class="ex-name">${ex.n}</div><div class="ex-sets">${ex.s}</div></div>
+    </div>`;
+  });
+
+  const allDone = dayData.exercises.every((_, i) => state.exercises[state.currentWeekGroup + '-' + state.currentDay + '-' + i]);
+  const tKey = todayKey(state.currentDay);
+  const dayMarked = state.trainedDays[tKey];
+
+  tc.innerHTML = `
+    <div class="training-card">
+      <div class="tc-header">
+        <div>
+          <div class="tc-title">${dayData.name} — ${dayData.label}</div>
+          <div class="tc-subtitle">${state.currentWeekGroup === '1-4' ? 'Wochen 1–4 · Fundament' : 'Wochen 5–8 · Intensität'}</div>
+        </div>
+        <div class="tc-badge ${badge}">${badgeTxt}</div>
+      </div>
+      <div class="exercise-rows">${exHTML}</div>
+      ${dayData.type !== 'rest' ? `<button class="day-complete-btn${dayMarked ? ' done' : ''}" onclick="markDayDone('${tKey}')">${dayMarked ? '✓ Tag abgeschlossen!' : 'Training abschließen'}</button>` : ''}
+    </div>`;
+}
+
+function todayKey(dayIdx) {
+  // Just use actual today as key for current day
+  return today();
+}
+
+function toggleEx(key) {
+  state.exercises[key] = !state.exercises[key];
+  save();
+  renderTraining();
+}
+
+function markDayDone(key) {
+  state.trainedDays[key] = !state.trainedDays[key];
+  save();
+  renderTraining();
+}
+
+// ============================================================
+// NUTRITION
+// ============================================================
+function renderNutrition() {
+  const t = today();
+  let totCal = 0, totProt = 0, totCarb = 0, totFat = 0;
+
+  const mc = document.getElementById('mealCards');
+  mc.innerHTML = '';
+
+  MEALS.forEach(meal => {
+    const mealDone = state.mealDone[t + '-' + meal.id];
+    if (mealDone) { totCal += meal.cal; totProt += meal.prot; totCarb += meal.carb; totFat += meal.fat; }
+
+    let itemsHTML = '';
+    meal.items.forEach((item, i) => {
+      const itemKey = t + '-' + meal.id + '-' + i;
+      const eaten = state.meals[itemKey];
+      itemsHTML += `<div class="food-item${eaten ? ' eaten-item' : ''}" onclick="toggleFood('${itemKey}','${meal.id}')">
+        <div class="food-check">${eaten ? '✓' : ''}</div>
+        <span>${item}</span>
+      </div>`;
+    });
+
+    mc.innerHTML += `<div class="meal-card">
+      <div class="meal-header" onclick="toggleMealDone('${meal.id}')">
+        <div class="meal-header-left">
+          <span class="meal-time-badge">${meal.time}</span>
+          <span class="meal-title">${meal.name}</span>
+        </div>
+        <span class="meal-done-badge ${mealDone ? 'eaten' : 'pending'}">${mealDone ? '✓ Gegessen' : 'Ausstehend'}</span>
+      </div>
+      <div class="meal-body">${itemsHTML}</div>
+      <div class="macro-bar">
+        <div class="macro-pill"><div class="mpv">${meal.cal}</div><div class="mpl">kcal</div></div>
+        <div class="macro-pill"><div class="mpv">${meal.prot}g</div><div class="mpl">Protein</div></div>
+        <div class="macro-pill"><div class="mpv">${meal.carb}g</div><div class="mpl">Carbs</div></div>
+        <div class="macro-pill"><div class="mpv">${meal.fat}g</div><div class="mpl">Fett</div></div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('nCalDone').textContent = totCal;
+  document.getElementById('nProtDone').textContent = totProt + 'g';
+  document.getElementById('nCarbDone').textContent = totCarb + 'g';
+  document.getElementById('nFatDone').textContent = totFat + 'g';
+}
+
+function toggleMealDone(mealId) {
+  const key = today() + '-' + mealId;
+  state.mealDone[key] = !state.mealDone[key];
+  save();
+  renderNutrition();
+}
+
+function toggleFood(itemKey, mealId) {
+  state.meals[itemKey] = !state.meals[itemKey];
+  save();
+  renderNutrition();
+}
+
+// ============================================================
+// PROGRESS / WEIGHT
+// ============================================================
+let chart = null;
+
+function renderProgress() {
+  const di = document.getElementById('dateInput');
+  if (!di.value) di.value = today();
+
+  renderWeightLog();
+  renderChart();
+}
+
+function addWeight() {
+  const kg = parseFloat(document.getElementById('weightInput').value);
+  const date = document.getElementById('dateInput').value;
+  if (!kg || !date) return;
+
+  // remove existing for same date
+  state.weights = state.weights.filter(w => w.date !== date);
+  state.weights.push({ date, kg });
+  state.weights.sort((a, b) => a.date.localeCompare(b.date));
+  save();
+  renderWeightLog();
+  renderChart();
+  document.getElementById('weightInput').value = '';
+}
+
+function renderWeightLog() {
+  const le = document.getElementById('logEntries');
+  le.innerHTML = '';
+  const rev = [...state.weights].reverse();
+  rev.forEach((w, i) => {
+    const prev = rev[i + 1];
+    const diff = prev ? (w.kg - prev.kg) : null;
+    const diffHTML = diff !== null
+      ? `<span class="le-diff ${diff > 0 ? 'up' : 'down'}">${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg</span>`
+      : '<span class="le-diff" style="color:var(--muted)">Start</span>';
+    le.innerHTML += `<div class="log-entry">
+      <span class="le-date">${new Date(w.date).toLocaleDateString('de-DE')}</span>
+      <span class="le-weight">${w.kg} kg</span>
+      ${diffHTML}
+    </div>`;
+  });
+  if (!state.weights.length) le.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px">Noch keine Einträge</div>';
+}
+
+function renderChart() {
+  const canvas = document.getElementById('weightChart');
+  const ctx = canvas.getContext('2d');
+
+  if (chart) { chart.destroy(); chart = null; }
+
+  if (!state.weights.length) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#444';
+    ctx.font = '14px Barlow';
+    ctx.textAlign = 'center';
+    ctx.fillText('Noch keine Daten', canvas.width / 2, 60);
+    return;
+  }
+
+  const labels = state.weights.map(w => new Date(w.date).toLocaleDateString('de-DE', {day:'numeric',month:'short'}));
+  const data = state.weights.map(w => w.kg);
+
+  // Simple canvas chart
+  const W = canvas.offsetWidth || 800;
+  const H = 220;
+  canvas.width = W;
+  canvas.height = H;
+
+  const pad = { top: 20, right: 20, bottom: 30, left: 45 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  const minKg = Math.min(...data) - 2;
+  const maxKg = Math.max(...data) + 2;
+
+  const xScale = i => pad.left + (i / (data.length - 1 || 1)) * cW;
+  const yScale = v => pad.top + cH - ((v - minKg) / (maxKg - minKg)) * cH;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // grid lines
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (cH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    const val = maxKg - ((maxKg - minKg) / 4) * i;
+    ctx.fillStyle = '#555';
+    ctx.font = '11px Barlow';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(1), pad.left - 5, y + 4);
+  }
+
+  // gradient fill
+  const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+  grad.addColorStop(0, 'rgba(232,37,42,0.3)');
+  grad.addColorStop(1, 'rgba(232,37,42,0.01)');
+
+  ctx.beginPath();
+  data.forEach((v, i) => { i === 0 ? ctx.moveTo(xScale(i), yScale(v)) : ctx.lineTo(xScale(i), yScale(v)); });
+  ctx.lineTo(xScale(data.length - 1), H - pad.bottom);
+  ctx.lineTo(xScale(0), H - pad.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // line
+  ctx.beginPath();
+  data.forEach((v, i) => { i === 0 ? ctx.moveTo(xScale(i), yScale(v)) : ctx.lineTo(xScale(i), yScale(v)); });
+  ctx.strokeStyle = '#E8252A';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // dots
+  data.forEach((v, i) => {
+    ctx.beginPath();
+    ctx.arc(xScale(i), yScale(v), 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#E8252A';
+    ctx.fill();
+    ctx.strokeStyle = '#0A0A0A';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // x labels
+  ctx.fillStyle = '#555';
+  ctx.font = '10px Barlow';
+  ctx.textAlign = 'center';
+  const step = Math.ceil(data.length / 6);
+  data.forEach((_, i) => {
+    if (i % step === 0 || i === data.length - 1) {
+      ctx.fillText(labels[i], xScale(i), H - 8);
+    }
+  });
+
+  // target line
+  const target = 88;
+  if (target >= minKg && target <= maxKg) {
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(pad.left, yScale(target));
+    ctx.lineTo(W - pad.right, yScale(target));
+    ctx.strokeStyle = '#C8A84B';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#C8A84B';
+    ctx.font = '10px Barlow';
+    ctx.textAlign = 'right';
+    ctx.fillText('Ziel 88kg', W - pad.right - 4, yScale(target) - 4);
+  }
+}
+
+// ============================================================
+// AI ANALYSIS
+// ============================================================
+let uploadedImages = [];
+
+function handleImages(files) {
+  Array.from(files).forEach(f => {
+    if (uploadedImages.length >= 4) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedImages.push({ dataUrl: e.target.result, file: f });
+      renderPreviews();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function renderPreviews() {
+  const pi = document.getElementById('previewImgs');
+  pi.innerHTML = '';
+  uploadedImages.forEach((img, i) => {
+    const w = document.createElement('div');
+    w.className = 'preview-img-wrap';
+    w.innerHTML = `<img src="${img.dataUrl}"><button class="rm-img" onclick="removeImg(${i})">×</button>`;
+    pi.appendChild(w);
+  });
+  document.getElementById('analyzeBtn').disabled = uploadedImages.length === 0;
+}
+
+function removeImg(i) {
+  uploadedImages.splice(i, 1);
+  renderPreviews();
+}
+
+async function runAnalysis() {
+  if (!uploadedImages.length) return;
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Analyse läuft...';
+
+  const result = document.getElementById('analysisResult');
+  const text = document.getElementById('analysisText');
+  result.style.display = 'block';
+  text.innerHTML = '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+
+  try {
+    const content = [];
+
+    uploadedImages.forEach((img, i) => {
+      const base64 = img.dataUrl.split(',')[1];
+      const mediaType = img.file.type || 'image/jpeg';
+      content.push({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } });
+      content.push({ type: "text", text: `Bild ${i + 1}` });
+    });
+
+    content.push({ type: "text", text: `Du bist ein professioneller Fitness- und MMA-Coach. Analysiere diese Körperfotos von Erol (23 Jahre, 1,80m, ca. 95kg, Ringer-Hintergrund, Ziel UFC). 
+
+Gib eine strukturierte, ehrliche Analyse auf Deutsch:
+
+1. KÖRPERBAU-ANALYSE
+- Muskelgruppen die gut entwickelt sind
+- Bereiche mit Entwicklungspotenzial
+- Geschätzte Körperfettanteil (grob)
+
+2. MMA-RELEVANTE EINSCHÄTZUNG
+- Welche Körperpartien helfen ihm im Grappling/Ringen
+- Was für seinen Körpertyp typisch gut/weniger gut im MMA funktioniert
+- Gewichtsklassen-Empfehlung basierend auf Körperbau
+
+3. TRAINING-FOKUS (nächste 8 Wochen)
+- Top 3 Prioritäten für seinen Körpertyp
+- Spezifische Tipps die zu seinem Körperbau passen
+
+Sei direkt, konstruktiv und motivierend. Kein Blabla.` });
+
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content }]
+      })
+    });
+
+    const data = await resp.json();
+    const output = data.content?.map(b => b.text || '').join('\n') || 'Fehler bei der Analyse.';
+    text.textContent = output;
+  } catch (err) {
+    text.textContent = 'Fehler: ' + err.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Neue Analyse starten';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('navDate').textContent = todayLabel();
+// Pre-seed one weight entry if none
+if (!state.weights.length) {
+  state.weights.push({ date: today(), kg: 95 });
+  save();
+}
+renderDash();
+</script>
+</body>
+</html>
